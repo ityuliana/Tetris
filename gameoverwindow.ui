@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GameOverWindow</class>
+ <widget class="QWidget" name="GameOverWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: transparent;</string>
+  </property>
+  <widget class="QWidget" name="widget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>50</y>
+     <width>360</width>
+     <height>460</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: #4A148C;
+border-radius: 20px;</string>
+   </property>
+   <widget class="QLabel" name="titleLabel">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>70</y>
+      <width>250</width>
+      <height>48</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: #FFD600;
+font-size: 36px;
+font-weight: bold;</string>
+    </property>
+    <property name="text">
+     <string>Гра закінчена!</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="playAgainButton">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>300</y>
+      <width>281</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: #FFD600;
+    color: #4A148C;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 27px;
+}
+QPushButton:hover {
+    background-color: #FFE033;
+}</string>
+    </property>
+    <property name="text">
+     <string>▶  Грати знову</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="scoreTitleLabel">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>130</y>
+      <width>81</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: #CE93D8;
+font-size: 18px;
+qproperty-alignment: 'AlignCenter';
+</string>
+    </property>
+    <property name="text">
+     <string>Рахунок</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="bestLabel">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>250</y>
+      <width>161</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: #FFD600;
+font-size: 20px;
+qproperty-alignment: 'AlignCenter';</string>
+    </property>
+    <property name="text">
+     <string>Рекорд: 0</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="scoreLabel">
+    <property name="geometry">
+     <rect>
+      <x>105</x>
+      <y>160</y>
+      <width>131</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: white;
+font-size: 64px;
+font-weight: bold;
+qproperty-alignment: 'AlignCenter';</string>
+    </property>
+    <property name="text">
+     <string>0</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="crownLabel">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>-10</y>
+      <width>101</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font-size: 64px;</string>
+    </property>
+    <property name="text">
+     <string>👑</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="menuButton">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>370</y>
+      <width>281</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 27px;
+    border: 2px solid white;
+}
+QPushButton:hover {
+    background-color: rgba(255,255,255,20);
+}</string>
+    </property>
+    <property name="text">
+     <string>🏠  Меню</string>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
