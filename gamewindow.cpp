@@ -2,19 +2,18 @@
 #include "ui_gamewindow.h"
 #include "gameoverwindow.h"
 #include "ui_settingswindow.h"
-#include <QPainter> // налаштування графіки
-#include <QMouseEvent> //події миші
-#include <QSettings> //збереження рекорд на диску
+#include <QPainter>
+#include <QMouseEvent>
+#include <QSettings>
 #include <QRandomGenerator>
 #include <QDialog>
 
-// масив кольорів для фігур
 static const QColor COLORS[] = {
     {"#F44336"}, {"#FFD600"}, {"#4CAF50"},
     {"#2196F3"}, {"#FF9800"}, {"#9C27B0"}
 };
 
-// масив фігур(x,y)
+
 static const QVector<QVector<QPoint>> SHAPES = {
     {{0,0},{1,0},{2,0}}, {{0,0},{0,1},{0,2}},
     {{0,0},{1,0},{0,1},{1,1}}, {{0,0},{1,0},{2,0},{3,0}},
@@ -22,42 +21,32 @@ static const QVector<QVector<QPoint>> SHAPES = {
     {{0,0},{0,1},{1,1},{1,2}}, {{0,0},{1,0},{2,0},{1,1}},
     {{0,0},{1,0},{0,1}}, {{0,0},{0,1},{1,1}},
     {{0,0},{1,0},{2,0},{2,1}}, {{0,0},{1,0}},
-    {{0,0},{0,1}}, {{0,0}},
-    };
+    {{0,0},{0,1}}, {{0,0}},};
 
 GameWindow::GameWindow(QWidget *parent) : QWidget(parent), ui(new Ui::GameWindow) {
     ui->setupUi(this);
     setFixedSize(500, 650);
-    isAnimating = false; isDragging = false; dragPieceIndex = -1;
-    setupGridWidgets();
+    setWindowTitle("BlockBlast");
 
-    QTimer::singleShot(0, this, [this]() {
-        QPoint center = QGuiApplication::primaryScreen()->geometry().center() - rect().center();
-        center.setY(center.y() - 40);
-        move(center);
-    });
-
-    clearAnimTimer = new QTimer(this);//для зникнення рядків
+    clearAnimTimer = new QTimer(this);
     connect(clearAnimTimer, &QTimer::timeout, this, [this]() {
-        animAlpha -= 30;//зменшуємо прозорість
-        updateGridWidgets();
+        animAlpha -= 30;
         if(animAlpha <= 0) {
             clearAnimTimer->stop();
             isAnimating = false;
-            for(int r : animRows)//очищаємо заповнені рядки
+            for(int r : animRows)
                 for(int c = 0; c < GRID_SIZE; c++)
                     grid[r][c] = 0, gridColors[r][c] = Qt::transparent;
-            for(int c : animCols)//очищаємо заповнені стовпчики
+            for(int c : animCols)
                 for(int r = 0; r < GRID_SIZE; r++)
                     grid[r][c] = 0, gridColors[r][c] = Qt::transparent;
             animRows.clear(); animCols.clear();
-            updateGridWidgets();
             saveScore(); checkGameOver();
         }
-        update();//премальовуємо вікно
+        update();
     });
 
-    isAnimating = false; isDragging = false; dragPieceIndex = -1;//жодна фігура не вибрана
+    isAnimating = false; isDragging = false; dragPieceIndex = -1;
     loadScore(); startNewGame();
 }
 
@@ -68,7 +57,6 @@ void GameWindow::startNewGame() {
         for(int c = 0; c < GRID_SIZE; c++)
             grid[r][c] = 0, gridColors[r][c] = Qt::transparent;
     currentScore = 0; isDragging = false; dragPieceIndex = -1;
-    updateGridWidgets();
     generatePieces(); updateScoreLabels(); update();
 }
 
@@ -84,94 +72,24 @@ QPoint GameWindow::gridOrigin() {
 void GameWindow::generatePieces() {
     int startY = gridOrigin().y() + GRID_SIZE * CELL_SIZE + 20;
     int w = width();
-   // int pos[] = { w/8, w/2 - 30, w*6/8 - 20 };
-    int pos[] = { w/6, w/2 - 20, w*4/6 };
-    for(int i = 0; i < 3; i++)
-        pieces[i] = {
-            SHAPES[QRandomGenerator::global()->bounded((int)SHAPES.size())],
-            COLORS[QRandomGenerator::global()->bounded(6)],
-            QPoint(pos[i], startY), false
-        };
+    int zoneW = w / 3;
+    for(int i = 0; i < 3; i++) {
+        auto shape = SHAPES[QRandomGenerator::global()->bounded((int)SHAPES.size())];
+        auto color = COLORS[QRandomGenerator::global()->bounded(6)];
+
+        int maxX = 0;
+        for(auto &cell : shape) if(cell.x() > maxX) maxX = cell.x();
+        int pieceWidth = (maxX + 1) * 40;
+        int zoneCenter = zoneW * i + zoneW / 2;
+        int startX = zoneCenter - pieceWidth / 2;
+        pieces[i] = { shape, color, QPoint(startX, startY), false };
+    }
 }
 
 void GameWindow::paintEvent(QPaintEvent *) {
     QPainter p(this);
-    p.setRenderHint(QPainter::Antialiasing);//згладжування країв
-    drawPieces(p);
-}
-
-QString GameWindow::cellStyle(const QColor &color, bool occupied, bool preview, bool animating) const {
-    if(preview) {
-        return "background-color: rgba(255,255,255,60);"
-               "border: 1px solid rgba(255,255,255,90);"
-               "border-radius: 6px;";
-    }
-
-    if(animating) {
-        return QString("background-color: rgba(255,255,255,%1);"
-                       "border: none;"
-                       "border-radius: 6px;").arg(animAlpha);
-    }
-
-    if(occupied) {
-        QColor border = color.darker(130);
-        return QString("background-color: %1;"
-                       "border: 1px solid %2;"
-                       "border-radius: 6px;")
-            .arg(color.name(), border.name());
-    }
-
-    return "background-color: #1A2980;"
-           "border: 1px solid #2A3990;"
-           "border-radius: 6px;";
-}
-
-void GameWindow::setupGridWidgets() {
-    QPoint o = gridOrigin();
-
-    for(int r = 0; r < GRID_SIZE; r++) {
-        for(int c = 0; c < GRID_SIZE; c++) {
-            QFrame *cell = new QFrame(this);
-            cell->setGeometry(o.x() + c * CELL_SIZE + 2,
-                              o.y() + r * CELL_SIZE + 2,
-                              CELL_SIZE - 4,
-                              CELL_SIZE - 4);
-            cell->show();
-            gridCells[r][c] = cell;
-        }
-    }
-
-}
-
-void GameWindow::updateGridWidgets() {
-    bool preview[GRID_SIZE][GRID_SIZE] = {};
-
-    if(isDragging && dragPieceIndex >= 0) {
-        QPoint o = gridOrigin();
-        int col = (dragPos.x() - o.x()) / CELL_SIZE;
-        int row = (dragPos.y() - o.y()) / CELL_SIZE;
-
-        if(canPlace(dragPieceIndex, row, col)) {
-            for(auto &cell : pieces[dragPieceIndex].cells) {
-                int r = row + cell.y();
-                int c = col + cell.x();
-                if(r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE)
-                    preview[r][c] = true;
-            }
-        }
-    }
-
-    for(int r = 0; r < GRID_SIZE; r++) {
-        for(int c = 0; c < GRID_SIZE; c++) {
-            bool anim = false;
-            if(isAnimating) {
-                for(int ar : animRows) if(ar == r) { anim = true; break; }
-                if(!anim) for(int ac : animCols) if(ac == c) { anim = true; break; }
-            }
-
-            gridCells[r][c]->setStyleSheet(cellStyle(gridColors[r][c], grid[r][c], preview[r][c], anim));
-        }
-    }
+    p.setRenderHint(QPainter::Antialiasing);
+    drawGrid(p); drawPieces(p);
 }
 
 void GameWindow::drawBlock(QPainter &p, int x, int y, QColor c, int s) {
@@ -243,7 +161,6 @@ void GameWindow::mousePressEvent(QMouseEvent *event) {
             if(QRect(x,y,36,36).contains(event->pos())) {
                 isDragging=true; dragPieceIndex=i;
                 dragPos=event->pos()-QPoint(CELL_SIZE/2,CELL_SIZE/2);
-                updateGridWidgets();
                 return;
             }
         }
@@ -253,7 +170,6 @@ void GameWindow::mousePressEvent(QMouseEvent *event) {
 void GameWindow::mouseMoveEvent(QMouseEvent *event) {
     if(!isDragging) return;
     dragPos = event->pos()-QPoint(CELL_SIZE/2,CELL_SIZE/2);
-    updateGridWidgets();
     update();
 }
 
@@ -270,7 +186,7 @@ void GameWindow::mouseReleaseEvent(QMouseEvent *event) {
         checkAndClearLines();
         checkGameOver();
     }
-    dragPieceIndex = -1; updateGridWidgets(); update();
+    dragPieceIndex = -1; update();
 }
 
 bool GameWindow::canPlace(int idx, int row, int col) {
@@ -286,7 +202,6 @@ void GameWindow::placePiece(int idx, int row, int col) {
         int r=row+cell.y(), c=col+cell.x();
         grid[r][c]=1; gridColors[r][c]=pieces[idx].color; currentScore++;
     }
-    updateGridWidgets();
     pieces[idx].used=true; updateScoreLabels();
 }
 
@@ -303,11 +218,10 @@ void GameWindow::checkAndClearLines() {
         if(full) cols.append(c);
     }
     if(rows.isEmpty() && cols.isEmpty()) { saveScore(); return; }
-    currentScore += (rows.size()+cols.size())*10;//+10 очків за кожен рядків/стовпчиків
+    currentScore += (rows.size()+cols.size())*10;
     updateScoreLabels();
     animRows=rows; animCols=cols;
     animAlpha=255; isAnimating=true;
-    updateGridWidgets();
     clearAnimTimer->start(30);
 }
 
@@ -329,19 +243,19 @@ void GameWindow::saveScore() {
     if(currentScore > bestScore) {
         bestScore = currentScore;
         QSettings s("BlockBlast","Game");
-        s.setValue("bestScore", bestScore);//зберігає на диску
+        s.setValue("bestScore", bestScore);
         updateScoreLabels();
     }
 }
 
 void GameWindow::loadScore() {
-    bestScore = QSettings("BlockBlast","Game").value("bestScore",0).toInt();//завантажуємо рекод з диску
+    bestScore = QSettings("BlockBlast","Game").value("bestScore",0).toInt();
 }
 
 void GameWindow::on_settingsButton_clicked() {
-    QDialog *dlg = new QDialog(this);//діалог
+    QDialog *dlg = new QDialog(this);
     Ui::SettingsWindow ui_s;
-    ui_s.setupUi(dlg);//підключення
+    ui_s.setupUi(dlg);
     connect(ui_s.replayButton, &QPushButton::clicked, this, [this,dlg](){ dlg->close(); startNewGame(); });
     connect(ui_s.exitButton,   &QPushButton::clicked, this, [this,dlg](){ dlg->close(); emit backToMenu(); });
     dlg->exec();
