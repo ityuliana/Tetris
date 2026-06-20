@@ -3,7 +3,6 @@
 #include <QWidget>
 #include <QTimer>
 #include <QPainter>
-#include <QFrame>
 
 static const int GRID_SIZE = 8;
 static const int CELL_SIZE = 45;
@@ -42,20 +41,14 @@ private:
     QPoint dragPos;
     bool isDragging;
     QTimer *clearAnimTimer;
-    QFrame *gridCells[GRID_SIZE][GRID_SIZE];
     QVector<int> animRows;
     QVector<int> animCols;
     int animAlpha;
     bool isAnimating;
-    bool gameOverVisible;
-    QRect gameOverPlayBtn;
-    QRect gameOverMenuBtn;
     void generatePieces();
     void drawBlock(QPainter &p, int x, int y, QColor col, int size);
     void drawGrid(QPainter &p);
     void drawPieces(QPainter &p);
-    void drawGameOver(QPainter &p);
-    void showGameOver();
     bool canPlace(int pieceIdx, int row, int col);
     void placePiece(int pieceIdx, int row, int col);
     void checkAndClearLines();
@@ -63,9 +56,6 @@ private:
     void saveScore();
     void loadScore();
     void updateScoreLabels();
-    void setupGridWidgets();
-    void updateGridWidgets();
-    QString cellStyle(const QColor &color, bool occupied, bool preview, bool animating) const;
     QPoint gridOrigin();
 
 };
